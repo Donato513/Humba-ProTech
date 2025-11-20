@@ -1,0 +1,37 @@
+# Name of the workflow, which will appear in the "Actions" tab on GitHub
+name: Deploy Website to GitHub Pages
+
+# This section defines when the workflow should run.
+# It will run automatically on every 'push' to the 'main' branch.
+on:
+  push:
+    branches:
+      - main  # IMPORTANT: If your main branch is called 'master', change this to 'master'
+
+# This section defines the jobs to be run. We have one job called 'deploy'.
+jobs:
+  deploy:
+    # The job will run on the latest version of Ubuntu Linux on a virtual machine provided by GitHub.
+    runs-on: ubuntu-latest
+
+    # These are the individual steps the job will perform in sequence.
+    steps:
+      # Step 1: Checks out your repository's code onto the virtual machine.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: This is the magic step! It creates the 'config.js' file.
+      # It uses 'echo' to write the line of code into a new file named config.js.
+      # ${{ secrets.API_KEY }} is how we securely access the secret you created in the previous step.
+      - name: Create config.js from GitHub Secret
+        run: echo "const GEMINI_API_KEY = \"${{ secrets.API_KEY }}\";" > config.js
+
+      # Step 3: This action takes all your project files (including the newly created config.js)
+      # and deploys them to a special branch called 'gh-pages' for hosting.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          # This token is automatically provided by GitHub and gives the action permission to push to your repo.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # This tells the action to publish everything from the root directory of your project.
+          publish_dir: .
